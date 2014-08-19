@@ -1,10 +1,17 @@
 defmodule ExTask do
   use Application
 
+  defp convert nil do
+  	0
+  end
+  defp convert some do
+  	some
+  end
+
   def start(_type, _args) do
   	:ok = :pg2.create(:tasks)
     {:ok, pid} = Extasks.Supervisor.start_link
-  	for n <- 1..(:application.get_all_env(:extask)[:workers]) do
+  	for n <- 1..convert(:application.get_all_env(:extask)[:workers]) do
   		:supervisor.start_child Extasks.Supervisor, Supervisor.Spec.worker(ExTask.Server, [], [id: :erlang.binary_to_atom("extask#{n}", :utf8)])
   	end
   	{:ok, pid}
