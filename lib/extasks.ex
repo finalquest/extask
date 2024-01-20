@@ -9,7 +9,7 @@ defmodule ExTask do
   end
 
   def start(_type, _args) do
-  	:ok = :pg2.create(:tasks)
+    :pg.start_link()
     {:ok, pid} = Extasks.Supervisor.start_link
   	for n <- 1..convert(:application.get_all_env(:extask)[:workers]) do
   		:supervisor.start_child Extasks.Supervisor, Supervisor.Spec.worker(ExTask.Server, [], [id: :erlang.binary_to_atom("extask#{n}", :utf8)])
@@ -18,7 +18,7 @@ defmodule ExTask do
   end
 
   def run(task) do
-  	worker = :pg2.get_members(:tasks) |> Enum.shuffle |> hd
+  	worker = :pg.get_members(:tasks) |> Enum.shuffle |> hd
   	{worker, ExTask.Server.run(worker, task)}
   end
   def await({worker,task}, timeout \\ 5000), do: ExTask.Server.await({worker, task}, timeout)
@@ -46,7 +46,7 @@ defmodule ExTask.Server do
 		#
 		#	should wait until results appears
 		#
-		subsribe_to_results(worker, task, self)
+		subsribe_to_results(worker, task, self())
 
 		receive do
 			{:results, ^task, data} -> 
@@ -61,14 +61,14 @@ defmodule ExTask.Server do
 	#
 	definit do
 		debug_info "Starting tasks manager."
-		:pg2.join(:tasks, self)
+		:pg.join(:tasks, self())
 		initial_state(%{})
 	end 
 	defcall run(task), state: state do
-		root = self
+		root = self()
 		{child, _} = spawn_monitor(fn ->
 			result = task.()
-			send(root, {:done, self, result})
+			send(root, {:done, self(), result})
 		end)
 		set_and_reply(Map.put(state, child, %{response: :not_ready, waiter: nil}), child)
 	end
@@ -84,10 +84,10 @@ defmodule ExTask.Server do
 				new_state(Map.put(state, child, %{ current | waiter: waiter}))
 			%{response: response} ->
 				send(waiter, {:results, child, response})
-				noreply
+				noreply()
 			nil -> 
 				debug_info "Tried to subscribe to Phantom child: #{inspect child}"
-				noreply
+				noreply()
 		end
 	end
 
@@ -99,10 +99,10 @@ defmodule ExTask.Server do
 				new_state(Map.put state, pid, %{response: {:exit, reason}, waiter: waiter})
 			nil ->
 				debug_info "Phantom child #{inspect pid} exited."
-				noreply
+				noreply()
 			_response -> 
 				debug_info "Child #{inspect pid} exited..., saved response is: #{inspect _response}"
-				noreply
+				noreply()
 		end
 	end
 	definfo {:done, pid, result}, state: state do
