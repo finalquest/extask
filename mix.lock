@@ -1,4 +1,6 @@
-%{"exactor": {:git, "git://github.com/sasa1977/exactor.git", "6025ef4d37b7d6696ab88c4bc7cc99acb96f3bfc", [tag: "0467f8100bc735405d597dbf94996195eb31e0b6"]},
+%{
+  "exactor": {:git, "https://github.com/finalquest/exactor.git", "5b9f7a2067927f7c2196b87cdbef07274479ae40", [tag: "1.0.1"]},
   "exlager": {:git, "git://github.com/khia/exlager.git", "99eb3fb763ae546edfe2ac3dd181987a4872dfcc", []},
   "goldrush": {:git, "git://github.com/DeadZen/goldrush.git", "71e63212f12c25827e0c1b4198d37d5d018a7fec", [tag: "0.1.6"]},
-  "lager": {:git, "https://github.com/basho/lager.git", "4d8291edb72a25ac0efde907e2ecaa115108ff90", []}}
+  "lager": {:git, "https://github.com/basho/lager.git", "4d8291edb72a25ac0efde907e2ecaa115108ff90", []},
+}
